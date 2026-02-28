@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Core 核心业务逻辑模块
  * 包含密钥管理、OTP生成、二维码、备份等所有核心功能
  */
@@ -793,23 +793,11 @@ export function getCoreCode() {
     });
 
     // 模态框外部点击关闭
-    document.getElementById('secretModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideSecretModal();
-      }
-    });
-    
-    document.getElementById('qrModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideQRModal();
-      }
-    });
 
-    document.getElementById('importModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideImportModal();
-      }
-    });
+    
+
+
+
 
     // 页面卸载时清理定时器
     window.addEventListener('beforeunload', function() {
