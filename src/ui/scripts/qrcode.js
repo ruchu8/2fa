@@ -188,6 +188,9 @@ export function getQRCodeCode() {
 
       startQRScanner();
       disableBodyScroll();
+
+      // 监听粘贴事件
+      window.addEventListener('paste', handleGlobalPaste);
     }
 
     // 隐藏二维码扫描器
@@ -213,6 +216,93 @@ export function getQRCodeCode() {
       const fileInput = document.getElementById('qrImageInput');
       if (fileInput) {
         fileInput.value = '';
+      }
+
+      // 移除粘贴事件监听
+      window.removeEventListener('paste', handleGlobalPaste);
+    }
+
+    // 处理全局粘贴事件
+    async function handleGlobalPaste(event) {
+      const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          await decodeQRCodeFromBlob(blob);
+          break;
+        }
+      }
+    }
+
+    // 触发手动粘贴
+    async function triggerPasteQR() {
+      try {
+        const clipboardItems = await navigator.clipboard.read();
+        for (const clipboardItem of clipboardItems) {
+          for (const type of clipboardItem.types) {
+            if (type.startsWith('image/')) {
+              const blob = await clipboardItem.getType(type);
+              await decodeQRCodeFromBlob(blob);
+              return;
+            }
+          }
+        }
+        showCenterToast('❌', '剪贴板中没有找到图片');
+      } catch (err) {
+        console.error('无法读取剪贴板:', err);
+        showCenterToast('❌', '请使用 Ctrl+V 直接粘贴截图');
+      }
+    }
+
+    // 显示二维码扫描器并触发粘贴识别
+    function showPasteQRScanModal() {
+      showQRScanner(); // 先显示扫描器
+      // 延迟触发粘贴，确保模态框完全显示
+      setTimeout(() => {
+        triggerPasteQR();
+      }, 300);
+    }
+
+    // 从 Blob 解码二维码
+    async function decodeQRCodeFromBlob(blob) {
+      const status = document.getElementById('scannerStatus');
+      const originalStatusText = status.textContent;
+      status.textContent = '正在识别图片中的二维码...';
+      status.style.display = 'block';
+
+      try {
+        const img = new Image();
+        const url = URL.createObjectURL(blob);
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = url;
+        });
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0);
+
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = decodeQRCode(imageData);
+
+        if (code) {
+          processScannedQRCode(code);
+          showCenterToast('✅', '识别成功');
+        } else {
+          showCenterToast('❌', '未在图片中找到二维码');
+        }
+        
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('识别二维码出错:', err);
+        showCenterToast('❌', '识别失败: ' + err.message);
+      } finally {
+        status.style.display = 'none';
+        status.textContent = originalStatusText;
       }
     }
 

@@ -202,6 +202,37 @@ export function getComponentStyles() {
       color: var(--btn-primary-text);
     }
 
+    .scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* 扫描器操作区域 */
+    .scanner-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 15px 0;
+    }
+
+    .paste-hint {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+
+    .scanner-status {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
     .edit-btn {
       border-color: var(--warning);
       color: var(--warning);

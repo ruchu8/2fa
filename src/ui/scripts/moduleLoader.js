@@ -243,6 +243,7 @@ export function getModuleLoaderCode() {
     // 二维码功能懒加载
     window.showSecretQRCode = createLazyWrapper('qrcode', 'showSecretQRCode');
     window.showQRScanner = createLazyWrapper('qrcode', 'showQRScanner');
+    window.showPasteQRScanModal = createLazyWrapper('qrcode', 'showPasteQRScanModal');
     window.hideQRScanner = createLazyWrapper('qrcode', 'hideQRScanner');
     window.stopQRScanner = createLazyWrapper('qrcode', 'stopQRScanner');
     window.showQRCode = createLazyWrapper('qrcode', 'showQRCode');

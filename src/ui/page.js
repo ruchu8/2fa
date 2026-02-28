@@ -1,4 +1,4 @@
-﻿/**
+/**
  * UI页面生成模块 - 完整版本
  * 包含所有原版功能：搜索、导入导出、二维码、编辑删除等
  * 支持代码分割和懒加载优化
@@ -198,6 +198,13 @@ function getHTMLBody() {
         <!-- 连续扫描计数器 -->
         <div id="scanCounter" class="scan-counter" style="display: none;">
           已添加 <span id="scanCountNum">0</span> 个密钥
+        </div>
+
+        <div class="scanner-actions">
+          <button class="action-btn" onclick="triggerPasteQR()">
+            📋 粘贴截图识别
+          </button>
+          <div class="paste-hint">提示：在 PC 端截图后直接 Ctrl+V 即可</div>
         </div>
 
         <div id="scannerStatus" class="scanner-status">
@@ -1160,6 +1167,10 @@ function getHTMLBody() {
       <div class="submenu-item" onclick="showQRScanner(); closeActionMenu();">
         <span class="item-icon">📷</span>
         <span class="item-text">扫二维码</span>
+      </div>
+      <div class="submenu-item" onclick="showPasteQRScanModal(); closeActionMenu();">
+        <span class="item-icon">📋</span>
+        <span class="item-text">粘贴截图识别</span>
       </div>
       <div class="submenu-item" onclick="showAddModal(); closeActionMenu();">
         <span class="item-icon">➕</span>

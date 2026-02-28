@@ -6,8 +6,8 @@ workers_dev = true
 # KV 命名空间（生产环境）
 [[kv_namespaces]]
 binding = "SECRETS_KV"
-id = "8637642fcf3b41f6b96b0350d8d97341"
-preview_id = "b6c4090a117c46ce94cf0bd2a88ddedb"
+id = "8637642fcf3b41f6b96b0350d8d97341" # 您的 KV ID 已匹配
+preview_id = "b6c4090a117c46ce94cf0bd2a88ddedb" # 建议创建一个预览 KV 以便本地开发
 
 # 环境变量 (Secrets)
 # 注意：敏感信息使用 Cloudflare Secrets 安全存储
@@ -50,4 +50,4 @@ name = "2fa-dev"
 
 [[env.development.kv_namespaces]]
 binding = "SECRETS_KV"
-id = "27891dd17d854dad8de14448763fed4d"
+id = "8637642fcf3b41f6b96b0350d8d97341" # 修改为您的 KV ID 以便开发环境使用

@@ -280,5 +280,42 @@ export function getUICode() {
         closeActionMenu();
       }
     });
-`;
+
+    // 通用模态框显示/隐藏函数
+    function showModal(modalId, callback) {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
+      modal.style.display = 'flex';
+      modal.offsetHeight; // 触发重绘以确保过渡动画生效
+      modal.classList.add('show');
+
+      disableBodyScroll();
+
+      if (callback && typeof callback === 'function') {
+        callback();
+      }
+    }
+
+    function hideModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+
+      enableBodyScroll();
+    }
+
+    // 滚动控制函数
+    function disableBodyScroll() {
+      document.body.style.overflow = 'hidden';
+    }
+
+    function enableBodyScroll() {
+      document.body.style.overflow = '';
+    }
+  `;
 }

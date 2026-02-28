@@ -52,46 +52,32 @@ export async function handleBackupSecrets(request, env) {
 		const secrets = await getAllSecrets(env);
 
 		if (secrets && secrets.length > 0) {
-			// 创建备份数据结构
+			// 创建备份数据
+			const timestamp = new Date().toISOString();
+			const backupKey = `backup_${timestamp.replace(/[:.]/g, '-')}.json`;
+
+			// 🔒 加密整个备份对象
 			const backupData = {
-				timestamp: new Date().toISOString(),
-				version: '1.0',
-				count: secrets.length,
 				secrets: secrets,
+				timestamp: timestamp,
+				version: '1.0.0',
 			};
 
-			// 生成备份文件名（按日期和时间戳）
-			const now = new Date();
-			const dateStr = now.toISOString().split('T')[0];
-			const timeStr = now.toISOString().split('T')[1].split('.')[0].replace(/:/g, '-');
-			const backupKey = `backup_${dateStr}_${timeStr}.json`;
+			// 使用 env 自动处理加密（如果配置了加密）
+			const encryptedData = await encryptData(backupData, env);
+			const isEncrypted = typeof encryptedData === 'string' && encryptedData.startsWith('v1:');
 
-			// 🔒 加密备份数据（如果配置了 ENCRYPTION_KEY）
-			let backupContent;
-			let isEncrypted = false;
-
-			if (env.ENCRYPTION_KEY) {
-				// 加密整个备份对象
-				backupContent = await encryptData(backupData, env);
-				isEncrypted = true;
-				logger.info('备份数据已加密', {
-					backupKey,
-					encrypted: true,
-				});
-			} else {
-				// 向后兼容:如果没有配置加密密钥，仍然以明文保存
-				backupContent = JSON.stringify(backupData, null, 2);
-				logger.warn('备份数据以明文保存', {
-					backupKey,
-					reason: '未配置 ENCRYPTION_KEY',
-				});
-			}
-
-			// 存储备份到KV
-			await env.SECRETS_KV.put(backupKey, backupContent);
+			// 保存到 KV
+			await env.SECRETS_KV.put(backupKey, encryptedData, {
+				metadata: {
+					timestamp: timestamp,
+					count: secrets.length,
+					encrypted: isEncrypted,
+				},
+			});
 
 			logger.info('手动备份完成', {
-				backupKey,
+				backupKey: backupKey,
 				secretCount: secrets.length,
 				encrypted: isEncrypted,
 			});
