@@ -64,23 +64,19 @@ export function getModuleLoaderCode() {
         // 显示加载提示
         showLoadingToast(\`正在加载 \${getModuleDisplayName(moduleName)}...\`);
 
-        // 从服务器获取模块代码
-        const response = await authenticatedFetch(\`/modules/\${moduleName}.js\`);
-
-        if (!response.ok) {
-          throw new Error(\`加载模块失败: \${response.statusText}\`);
-        }
-
-        const code = await response.text();
-
-        // 执行模块代码（注入到全局作用域）
-        const script = document.createElement('script');
-        script.textContent = code;
-        document.head.appendChild(script);
+        // 通过 <script src> 加载模块，避免某些环境下的内联脚本执行限制
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = \`/modules/\${moduleName}.js?t=\${Date.now()}\`;
+          script.async = false;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error(\`无法加载模块脚本: \${moduleName}\`));
+          document.head.appendChild(script);
+        });
 
         // 标记为已加载
         moduleLoadState[moduleName].loaded = true;
-        moduleLoadState[moduleName].code = code;
+        moduleLoadState[moduleName].code = '[external] /modules/' + moduleName + '.js';
 
         console.log(\`✅ 模块 \${moduleName} 加载成功\`);
         hideLoadingToast();
@@ -195,7 +191,15 @@ export function getModuleLoaderCode() {
               return result;
             }
           } else {
-            throw new Error(\`函数 \${functionName} 在模块 \${moduleName} 中未找到\`);
+            await new Promise((r) => setTimeout(r, 0));
+            if (typeof window[functionName] === 'function' && window[functionName] !== wrapper) {
+              const result = window[functionName](...args);
+              if (returnsValue) {
+                return result;
+              }
+            } else {
+              throw new Error(\`函数 \${functionName} 在模块 \${moduleName} 中未找到\`);
+            }
           }
         } catch (error) {
           console.error(\`调用 \${functionName} 失败:\`, error);

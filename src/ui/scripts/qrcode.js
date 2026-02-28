@@ -956,5 +956,16 @@ export function getQRCodeCode() {
       // 清空文件输入，允许重复选择同一文件
       event.target.value = '';
     }
+
+    // 显式导出函数到全局 window 对象，确保懒加载器可以识别
+    window.toggleContinuousScan = toggleContinuousScan;
+    window.showQRCode = showQRCode;
+    window.showQRScanner = showQRScanner;
+    window.hideQRScanner = hideQRScanner;
+    window.triggerPasteQR = triggerPasteQR;
+    window.showPasteQRScanModal = showPasteQRScanModal;
+    window.retryCamera = retryCamera;
+    window.uploadImageForScan = uploadImageForScan;
+    window.handleImageUpload = handleImageUpload;
 `;
 }
