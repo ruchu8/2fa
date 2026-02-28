@@ -85,6 +85,123 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 点击悬浮按钮 → **🔄 还原配置** 查看备份列表、预览内容、还原或导出。
 
+### GitHub Actions 备份配置
+
+为了让 GitHub Actions 备份工作流正常运行，请在你的 GitHub 仓库设置中配置以下 Secrets：
+
+| Secret 名称 | 说明 | 是否必填 |
+| :--- | :--- | :--- |
+| `CLOUDFLARE_API_TOKEN` | 具有 KV 读取权限的 API 令牌 | **必填** |
+| `CLOUDFLARE_ACCOUNT_ID` | 你的 Cloudflare 账户Account Details ID（32位） | **必填** |
+| `KV_NAMESPACE_ID` | 你的 KV 命名空间 ID (例如：`863764*c***41f6b*b03*5*0d8d97341`) | **必填** |
+| `BACKUP_ENCRYPTION_KEY` | 用于备份文件加密的密码（不填则不加密） | 可选 |
+| `S3_ACCESS_KEY_ID` | S3 凭证 | 可选 |
+| `S3_SECRET_ACCESS_KEY` | S3 凭证 | 可选 |
+| `S3_BUCKET` | S3 配置 | 可选 |
+| `S3_REGION` | S3 配置 | 可选 |
+| `S3_ENDPOINT` | S3 配置 | 可选 |
+| `WEBDAV_URL` | WebDAV 连接信息 | 可选 |
+| `WEBDAV_USER` | WebDAV 连接信息 | 可选 |
+| `WEBDAV_PASSWORD` | WebDAV 连接信息 | 可选 |
+| `GH_BACKUP_TOKEN` | 具有备份仓库写入权限的 PAT (Token) | 可选 |
+| `GH_BACKUP_USER` | GitHub 备份用户名 | 可选 |
+| `GH_BACKUP_REPO` | GitHub 备份仓库名 | 可选 |
+
+**如何创建 CLOUDFLARE_API_TOKEN 并配置权限：**
+
+1.  登录到你的 Cloudflare Dashboard。
+2.  点击右上角的个人图标，选择 **"My Profile"** (我的个人资料)。
+3.  在左侧导航栏中，选择 **"API Tokens"** (API 令牌)。
+4.  点击 **"Create Token"** (创建令牌)。
+5.  选择 **"Create Custom Token"** (创建自定义令牌)。
+6.  **令牌名称 (Token Name)**：输入一个易于识别的名称，例如 `2FA-Backup-Action`。
+7.  **权限 (Permissions)**：配置以下权限：
+    *   **Account (账户)**:
+        *   **Workers KV Storage**: `Edit` (或至少 `Read`)
+    *   **Zone (区域)**:
+        *   **Workers Routes**: `Read`
+        *   **Workers Scripts**: `Read`
+8.  **客户端 IP 地址过滤 (Client IP Address Filtering)**：保持默认或根据需要配置。
+9.  **TTL (Time to Live)**：保持默认或根据需要配置。
+10. 点击 **"Continue to summary"** (继续到摘要)。
+11. 确认权限无误后，点击 **"Create Token"** (创建令牌)。
+12. **复制生成的 API Token**。这个 Token 只会显示一次，请务必妥善保存。
+13. 将此 Token 添加到你的 GitHub 仓库 Secrets 中，名称为 `CLOUDFLARE_API_TOKEN`。
+
+---
+
+| **S3 备份相关** | | |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | S3 凭证 | 可选 |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT` | S3 配置 | 可选 |
+
+**如何配置 S3 备份：**
+
+1.  **创建 S3 兼容存储**：在 AWS S3、Cloudflare R2、MinIO 等服务中创建一个存储桶。
+2.  **获取凭证**：
+    *   **`S3_ACCESS_KEY_ID`** 和 **`S3_SECRET_ACCESS_KEY`**：这是你的存储服务的访问密钥和秘密访问密钥。
+    *   **`S3_BUCKET`**：你创建的存储桶的名称。
+    *   **`S3_REGION`**：存储桶所在的区域（例如 `us-east-1`）。对于 R2，通常是 `auto`。
+    *   **`S3_ENDPOINT`**：如果使用 S3 兼容服务（如 R2），需要提供其 API 端点（例如 `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`）。AWS S3 通常不需要此项。
+3.  将这些凭证和配置作为 GitHub Secrets 添加到你的仓库中。
+
+---
+
+| **WebDAV 备份相关** | | |
+| `WEBDAV_URL`, `WEBDAV_USER`, `WEBDAV_PASSWORD` | WebDAV 连接信息 | 可选 |
+
+**如何配置 WebDAV 备份：**
+
+1.  **准备 WebDAV 服务**：你需要一个可用的 WebDAV 服务器，例如自建的 Nextcloud、AList，或者一些支持 WebDAV 的云存储服务。
+2.  **获取连接信息**：
+    *   **`WEBDAV_URL`**：WebDAV 服务器的完整 URL，例如 `https://dav.example.com/remote.php/webdav/`。
+    *   **`WEBDAV_USER`** 和 **`WEBDAV_PASSWORD`**：用于登录 WebDAV 服务器的用户名和密码。
+3.  将这些连接信息作为 GitHub Secrets 添加到你的仓库中。
+
+---
+
+| **GitHub 备份相关** | | |
+| `GH_BACKUP_TOKEN` | 具有备份仓库写入权限的 PAT (Token) | 可选 |
+| `GH_BACKUP_USER`, `GH_BACKUP_REPO` | 备份目标用户名和仓库名 | 可选 |
+
+**如何配置 GitHub 备份：**
+
+1.  **创建备份仓库**：创建一个新的 GitHub 私有仓库，用于存储备份文件。
+2.  **生成 Personal Access Token (PAT)**：
+    *   前往 GitHub **Settings** (设置) → **Developer settings** (开发者设置) → **Personal access tokens** (个人访问令牌) → **Tokens (classic)**。
+    *   点击 **"Generate new token"** (生成新令牌)。
+    *   **Note** (备注)：输入一个描述性名称，例如 `2FA-Backup-PAT`。
+    *   **Expiration** (有效期)：选择一个合适的有效期。
+    *   **Select scopes** (选择范围)：勾选 **`repo`** 权限（这将允许访问私有仓库）。
+    *   点击 **"Generate token"** (生成令牌)。
+    *   **复制生成的 PAT**。这个 Token 只会显示一次，请务必妥善保存。
+3.  **配置 GitHub Secrets**：
+    *   **`GH_BACKUP_TOKEN`**：将你生成的 PAT 添加到 GitHub Secrets。
+    *   **`GH_BACKUP_USER`**：你的 GitHub 用户名。
+    *   **`GH_BACKUP_REPO`**：你创建的备份仓库的名称。
+    *   **`GH_BACKUP_DIR`** (可选)：备份文件在仓库中存储的目录，默认为 `2fa-backups`。
+4.  将这些信息作为 GitHub Secrets 添加到你的仓库中。
+
+---
+
+### 如何解密并提取备份文件
+
+如果当天存在多份备份，系统会自动将它们打包成一个 `.tar.gz` 文件（如果配置了 `BACKUP_ENCRYPTION_KEY`，则后缀为 `.tar.gz.enc`）。
+
+1.  **解密文件** (仅限已加密的情况)：
+    ```bash
+    # 将 <encrypted_bundle> 替换为你的备份文件名 (如 2fa_backups_2026-02-28.tar.gz.enc)
+    # 将 <password> 替换为你的 BACKUP_ENCRYPTION_KEY 值
+    openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 -in <encrypted_bundle> -out backup_bundle.tar.gz -pass pass:<password>
+    ```
+
+2.  **解压打包文件**：
+    ```bash
+    # 解压后你会得到当天所有的 .json 原始备份文件
+    tar -xzf backup_bundle.tar.gz
+    ```
+
+---
+
 ### 安装为手机应用（PWA）
 
 - **iOS**：Safari 打开 → 分享按钮 → 添加到主屏幕
